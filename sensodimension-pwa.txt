@@ -1,0 +1,16 @@
+sensodimension-pwa/
+  index.html
+  manifest.webmanifest
+  service-worker.js
+
+  /audio/
+    ... (todos tus audios actuales)
+
+  /video/
+    ... (tus 3 videos de mandalas)
+
+  /icons/
+    icon-512.png
+    icon-192.png
+    icon-80.png          (opcional, para smartwatch / usos internos)
+    favicon-32.png

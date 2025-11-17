@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sensodimension · Reproductor Mandálico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#1e1630" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: radial-gradient(circle at top left, #ff9a9e 0%, #fad0c4 30%, #a18cd1 60%, #2b5876 100%);
+      color: #fdfdfd;
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 26px;
+      background: rgba(10, 12, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-area {
+      position: relative;
+      background: #000;
+    }
+
+    .video-area video {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      display: block;
+    }
+
+    @media (min-height: 780px) {
+      .video-area video {
+        height: 280px;
+      }
+    }
+
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), transparent 45%, rgba(0, 0, 0, 0.45));
+      pointer-events: none;
+    }
+
+    .video-label {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .video-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #14ff72;
+      box-shadow: 0 0 10px #14ff72;
+    }
+
+    .bottom-area {
+      padding: 14px 16px 10px 16px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .title-group h1 {
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .title-group h1 span {
+      font-weight: 700;
+    }
+
+    .title-group p {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      white-space: nowrap;
+    }
+
+    .track-info {
+      margin: 4px 0 8px;
+    }
+
+    .track-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .track-sub {
+      font-size: 0.8rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px 0 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fefefe;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease, opacity 0.14s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.95) translateY(1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .btn-main {
+      width: 52px;
+      height: 52px;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #ffb75e, #ed8f03);
+    }
+
+    .progress-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .progress-bar {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      position: absolute;
+      inset: 0 100% 0 0;
+      background: linear-gradient(90deg, #ffb75e, #ff6f91, #9b5cff);
+      transition: inset 0.08s linear;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 4px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #777;
+    }
+
+    .indicator-dot.on {
+      background: #14ff72;
+      box-shadow: 0 0 10px #14ff72;
+    }
+
+    .credits {
+      padding: 6px 16px 10px 16px;
+      font-size: 0.7rem;
+      opacity: 0.75;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      line-height: 1.4;
+      background: rgba(10, 12, 28, 0.9);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="frame">
+    <!-- VIDEO ARRIBA -->
+    <div class="video-area">
+      <video id="mandalaVideo" playsinline muted></video>
+      <div class="video-overlay"></div>
+      <div class="video-label">
+        <span class="video-dot"></span>
+        <span>Sensodimension · Mandalas en movimiento</span>
+      </div>
+    </div>
+
+    <!-- CONTROLES ABAJO -->
+    <div class="bottom-area">
+      <div class="header-row">
+        <div class="title-group">
+          <h1><span>Sensodimension</span> Player</h1>
+          <p>Audio aleatorio para relajación y meditación con mandalas animados.</p>
+        </div>
+        <div class="status-pill" id="modeLabel">
+          Modo: Aleatorio · PWA
+        </div>
+      </div>
+
+      <div class="track-info">
+        <div class="track-title" id="trackTitle">Cargando pista aleatoria…</div>
+        <div class="track-sub">Pulsa ▶ para iniciar la sesión.</div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn" id="prevBtn" title="Cambiar pista (aleatoria)">
+          ⏮
+        </button>
+        <button class="btn btn-main" id="playBtn" title="Play / Reanudar">
+          ▶
+        </button>
+        <button class="btn" id="pauseBtn" title="Pausa">
+          ⏸
+        </button>
+        <button class="btn" id="stopBtn" title="Stop">
+          ⏹
+        </button>
+        <button class="btn" id="nextBtn" title="Cambiar pista (aleatoria)">
+          ⏭
+        </button>
+      </div>
+
+      <div class="progress-row">
+        <span id="currentTime">0:00</span>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span id="duration">0:00</span>
+      </div>
+
+      <div class="footer-row">
+        <div class="indicator">
+          <span class="indicator-dot" id="audioStatusDot"></span>
+          <span id="audioStatusLabel">Detenido</span>
+        </div>
+        <span>Los mandalas se detienen cuando paras la música.</span>
+      </div>
+    </div>
+
+    <!-- CRÉDITOS AL PIE -->
+    <div class="credits">
+      Concepto, realización, temas musicales y videos mandalas creados por:<br>
+      <strong>Victor M. F. Avilan · Valor Agregado</strong>
+    </div>
+  </div>
+
+  <!-- AUDIO INVISIBLE -->
+  <audio id="audioElement"></audio>
+
+  <script>
+    // ====== PLAYLISTS (usa tus mismos archivos en /audio) ======
+    const audioPlaylist = [
+      "audio/Dawn's Tidal Meditation.m4a",
+      "audio/Depths of Tranquility.m4a",
+      "audio/Desert Night Awakening.m4a",
+      "audio/DroneLab-recording.wav",
+      "audio/Lunar Dialogue.m4a",
+      "audio/Moonlit Forest Ceremony.m4a",
+      "audio/Moonlit Forest Sanctuary.m4a",
+      "audio/Night Forest Dialogue.m4a",
+      "audio/Night Forest Temple.m4a",
+      "audio/Night Grove Ceremony.m4a",
+      "audio/Night River Passage.m4a",
+      "audio/Night Spirit Dialogue.m4a",
+      "audio/Night Tide Meditation.m4a",
+      "audio/Night's Gentle Passage.m4a",
+      "audio/Ocean Breath Meditation.m4a",
+      "audio/Ocean Depths Ascension.m4a",
+      "audio/Ocean Depths Meditation.m4a",
+      "audio/Ocean Zen.m4a",
+      "audio/Pond at Midnight.m4a",
+      "audio/Sacred Waters.m4a",
+      "audio/Seaside Theta.m4a"
+    ];
+
+    const mandalaVideos = [
+      "video/Mandala Beta relax.mp4",
+      "video/Mandala onda relajacion piano.mp4",
+      "video/Mandala theta-zen_VR.mp4.mp4"
+    ];
+
+    // ====== ELEMENTOS ======
+    const audioEl = document.getElementById("audioElement");
+    const mandalaVideoEl = document.getElementById("mandalaVideo");
+
+    const trackTitleEl = document.getElementById("trackTitle");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationEl = document.getElementById("duration");
+    const progressBarEl = document.getElementById("progressBar");
+    const progressFillEl = document.getElementById("progressFill");
+    const audioStatusDot = document.getElementById("audioStatusDot");
+    const audioStatusLabel = document.getElementById("audioStatusLabel");
+
+    const playBtn = document.getElementById("playBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+
+    // ====== ESTADO ======
+    let currentTrackIndex = -1;
+    let currentMandalaIndex = -1;
+
+    // ====== UTILIDADES ======
+    function getReadableName(path) {
+      const file = path.split("/").pop();
+      const noExt = file.replace(/\.[^/.]+$/, "");
+      return noExt.replace(/[_-]+/g, " ");
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+      const s = Math.floor(seconds % 60);
+      const m = Math.floor(seconds / 60);
+      const sStr = s < 10 ? "0" + s : s;
+      return m + ":" + sStr;
+    }
+
+    function updateStatus(isPlaying) {
+      if (isPlaying) {
+        audioStatusDot.classList.add("on");
+        audioStatusLabel.textContent = "Reproduciendo";
+      } else if (audioEl.currentTime > 0 && !audioEl.paused) {
+        audioStatusDot.classList.remove("on");
+        audioStatusLabel.textContent = "Pausado";
+      } else {
+        audioStatusDot.classList.remove("on");
+        audioStatusLabel.textContent = "Detenido";
+      }
+    }
+
+    function pickRandomTrackIndex(excludeIndex) {
+      if (!audioPlaylist.length) return -1;
+      if (audioPlaylist.length === 1) return 0;
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * audioPlaylist.length);
+      } while (idx === excludeIndex);
+      return idx;
+    }
+
+    function pickRandomMandalaIndex(excludeIndex) {
+      if (!mandalaVideos.length) return -1;
+      if (mandalaVideos.length === 1) return 0;
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * mandalaVideos.length);
+      } while (idx === excludeIndex);
+      return idx;
+    }
+
+    // ====== AUDIO ======
+    function loadTrackByIndex(index) {
+      if (index < 0 || index >= audioPlaylist.length) return;
+      currentTrackIndex = index;
+      const trackPath = audioPlaylist[currentTrackIndex];
+      audioEl.src = trackPath;
+      trackTitleEl.textContent = getReadableName(trackPath);
+      progressFillEl.style.inset = "0 100% 0 0";
+      currentTimeEl.textContent = "0:00";
+      durationEl.textContent = "0:00";
+    }
+
+    function playCurrentTrack() {
+      if (currentTrackIndex === -1) {
+        const idx = pickRandomTrackIndex(-1);
+        loadTrackByIndex(idx);
+      }
+
+      audioEl.play().then(() => {
+        syncMandalaWithAudio(true);
+        updateStatus(true);
+      }).catch(err => {
+        console.warn("Error al reproducir audio:", err);
+      });
+    }
+
+    function playRandomTrack() {
+      const nextIndex = pickRandomTrackIndex(currentTrackIndex);
+      loadTrackByIndex(nextIndex);
+      playCurrentTrack();
+    }
+
+    function pauseCurrentTrack() {
+      audioEl.pause();
+      syncMandalaWithAudio(false);
+      updateStatus(false);
+    }
+
+    function stopCurrentTrack() {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      syncMandalaWithAudio(false);
+      updateStatus(false);
+    }
+
+    // ====== VIDEO MANDALAS ======
+    function playRandomMandala() {
+      const nextIndex = pickRandomMandalaIndex(currentMandalaIndex);
+      if (nextIndex === -1) return;
+      currentMandalaIndex = nextIndex;
+      mandalaVideoEl.src = mandalaVideos[currentMandalaIndex];
+      mandalaVideoEl.currentTime = 0;
+
+      mandalaVideoEl.play().catch(err => {
+        console.warn("No se pudo reproducir el video de mandala:", err);
+      });
+    }
+
+    function syncMandalaWithAudio(isPlaying) {
+      if (isPlaying) {
+        if (mandalaVideoEl.paused || mandalaVideoEl.ended || !mandalaVideoEl.src) {
+          playRandomMandala();
+        } else {
+          mandalaVideoEl.play().catch(() => {});
+        }
+      } else {
+        mandalaVideoEl.pause();
+      }
+    }
+
+    // ====== EVENTOS AUDIO ======
+    audioEl.addEventListener("loadedmetadata", () => {
+      durationEl.textContent = formatTime(audioEl.duration);
+    });
+
+    audioEl.addEventListener("timeupdate", () => {
+      const current = audioEl.currentTime;
+      const dur = audioEl.duration || 0;
+      currentTimeEl.textContent = formatTime(current);
+
+      if (dur > 0) {
+        const percent = current / dur;
+        const rightInset = (1 - percent) * 100;
+        progressFillEl.style.inset = `0 ${rightInset}% 0 0`;
+      }
+    });
+
+    audioEl.addEventListener("play", () => {
+      updateStatus(true);
+      syncMandalaWithAudio(true);
+    });
+
+    audioEl.addEventListener("pause", () => {
+      if (audioEl.currentTime === 0 || audioEl.ended) {
+        updateStatus(false);
+        syncMandalaWithAudio(false);
+      } else {
+        updateStatus(false);
+        syncMandalaWithAudio(false);
+      }
+    });
+
+    audioEl.addEventListener("ended", () => {
+      playRandomTrack();
+    });
+
+    // ====== EVENTOS VIDEO ======
+    mandalaVideoEl.addEventListener("ended", () => {
+      if (!audioEl.paused && !audioEl.ended) {
+        playRandomMandala();
+      }
+    });
+
+    // ====== CONTROLES ======
+    playBtn.addEventListener("click", () => {
+      playCurrentTrack();
+    });
+
+    pauseBtn.addEventListener("click", () => {
+      pauseCurrentTrack();
+    });
+
+    stopBtn.addEventListener("click", () => {
+      stopCurrentTrack();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      playRandomTrack();
+    });
+
+    prevBtn.addEventListener("click", () => {
+      playRandomTrack();
+    });
+
+    progressBarEl.addEventListener("click", (event) => {
+      const rect = progressBarEl.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const ratio = x / rect.width;
+      if (!isNaN(audioEl.duration) && audioEl.duration > 0) {
+        audioEl.currentTime = ratio * audioEl.duration;
+      }
+    });
+
+    // ====== REGISTRO SERVICE WORKER ======
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(err => {
+          console.log("SW no registrado:", err);
+        });
+      });
+    }
+
+    // ====== INICIO ======
+    (function init() {
+      if (!audioPlaylist.length) {
+        trackTitleEl.textContent = "No hay pistas de audio configuradas";
+        return;
+      }
+      updateStatus(false);
+    })();
+  </script>
+</body>
+</html>
