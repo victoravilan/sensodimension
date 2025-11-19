@@ -242,13 +242,23 @@
     }
 
     .credits {
-      padding: 6px 16px 10px 16px;
+      padding: 6px 16px 4px 16px;
       font-size: 0.7rem;
-      opacity: 0.75;
+      opacity: 0.8;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       text-align: center;
       line-height: 1.4;
       background: rgba(10, 12, 28, 0.9);
+    }
+
+    .debug {
+      padding: 4px 16px 8px 16px;
+      font-size: 0.7rem;
+      opacity: 0.9;
+      background: rgba(10, 12, 28, 0.95);
+      color: #ffdf9f;
+      text-align: left;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -322,6 +332,8 @@
       Concepto, realización, temas musicales y videos mandalas creados por:<br>
       <strong>Victor M. F. Avilan · Valor Agregado</strong>
     </div>
+    <!-- DEBUG VISIBLE TAMBIÉN EN MÓVIL -->
+    <div class="debug" id="debugLog">DEBUG: listo para reproducir.</div>
   </div>
 
   <!-- AUDIO INVISIBLE -->
@@ -377,20 +389,26 @@
     const nextBtn = document.getElementById("nextBtn");
     const prevBtn = document.getElementById("prevBtn");
 
+    const debugEl = document.getElementById("debugLog");
+
+    function logDebug(msg) {
+      console.log(msg);
+      if (debugEl) {
+        debugEl.textContent = "DEBUG: " + msg;
+      }
+    }
+
     // ====== AJUSTE DE AUDIO Y LOGS DE DIAGNÓSTICO ======
-    // Aseguramos que el audio no esté silenciado y con volumen máximo
     audioEl.volume = 1.0;
     audioEl.muted = false;
 
-    // Log de errores de audio
     audioEl.addEventListener("error", () => {
       const e = audioEl.error;
-      console.error("Error de audio:", e && e.code, e);
+      logDebug("Error de audio: code=" + (e && e.code));
     });
 
-    // Log cuando comienza a reproducir
     audioEl.addEventListener("play", () => {
-      console.log("Reproduciendo:", audioEl.src);
+      logDebug("Reproduciendo: " + audioEl.src);
     });
 
     // ====== ESTADO ======
@@ -450,8 +468,11 @@
       if (index < 0 || index >= audioPlaylist.length) return;
       currentTrackIndex = index;
       const trackPath = audioPlaylist[currentTrackIndex];
+      audioEl.pause();
+      audioEl.currentTime = 0;
       audioEl.src = trackPath;
-      console.log("Cargando pista:", trackPath);
+      audioEl.load(); // fuerza recarga limpia
+      logDebug("Cargando pista: " + trackPath);
       trackTitleEl.textContent = getReadableName(trackPath);
       progressFillEl.style.inset = "0 100% 0 0";
       currentTimeEl.textContent = "0:00";
@@ -464,11 +485,14 @@
         loadTrackByIndex(idx);
       }
 
+      audioEl.muted = false;
+      audioEl.volume = 1.0;
+
       audioEl.play().then(() => {
         syncMandalaWithAudio(true);
         updateStatus(true);
       }).catch(err => {
-        console.error("Error al reproducir audio (playCurrentTrack):", err);
+        logDebug("Error al reproducir audio (playCurrentTrack): " + err);
       });
     }
 
@@ -500,7 +524,7 @@
       mandalaVideoEl.currentTime = 0;
 
       mandalaVideoEl.play().catch(err => {
-        console.warn("No se pudo reproducir el video de mandala:", err);
+        logDebug("No se pudo reproducir el video de mandala: " + err);
       });
     }
 
@@ -602,9 +626,11 @@
     (function init() {
       if (!audioPlaylist.length) {
         trackTitleEl.textContent = "No hay pistas de audio configuradas";
+        logDebug("No hay pistas configuradas.");
         return;
       }
       updateStatus(false);
+      logDebug("Listo. Pulsa ▶ para empezar.");
     })();
   </script>
 </body>
