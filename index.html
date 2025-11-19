@@ -377,6 +377,22 @@
     const nextBtn = document.getElementById("nextBtn");
     const prevBtn = document.getElementById("prevBtn");
 
+    // ====== AJUSTE DE AUDIO Y LOGS DE DIAGNÓSTICO ======
+    // Aseguramos que el audio no esté silenciado y con volumen máximo
+    audioEl.volume = 1.0;
+    audioEl.muted = false;
+
+    // Log de errores de audio
+    audioEl.addEventListener("error", () => {
+      const e = audioEl.error;
+      console.error("Error de audio:", e && e.code, e);
+    });
+
+    // Log cuando comienza a reproducir
+    audioEl.addEventListener("play", () => {
+      console.log("Reproduciendo:", audioEl.src);
+    });
+
     // ====== ESTADO ======
     let currentTrackIndex = -1;
     let currentMandalaIndex = -1;
@@ -435,6 +451,7 @@
       currentTrackIndex = index;
       const trackPath = audioPlaylist[currentTrackIndex];
       audioEl.src = trackPath;
+      console.log("Cargando pista:", trackPath);
       trackTitleEl.textContent = getReadableName(trackPath);
       progressFillEl.style.inset = "0 100% 0 0";
       currentTimeEl.textContent = "0:00";
@@ -451,7 +468,7 @@
         syncMandalaWithAudio(true);
         updateStatus(true);
       }).catch(err => {
-        console.warn("Error al reproducir audio:", err);
+        console.error("Error al reproducir audio (playCurrentTrack):", err);
       });
     }
 
