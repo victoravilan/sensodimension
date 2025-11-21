@@ -267,7 +267,7 @@
   <div class="frame">
     <!-- VIDEO ARRIBA -->
     <div class="video-area">
-      <video id="mandalaVideo" playsinline muted></video>
+      <video id="mandalaVideo" playsinline muted preload="metadata"></video>
       <div class="video-overlay"></div>
       <div class="video-label">
         <span class="video-dot"></span>
@@ -293,21 +293,11 @@
       </div>
 
       <div class="controls-row">
-        <button class="btn" id="prevBtn" title="Cambiar pista (aleatoria)">
-          ⏮
-        </button>
-        <button class="btn btn-main" id="playBtn" title="Play / Reanudar">
-          ▶
-        </button>
-        <button class="btn" id="pauseBtn" title="Pausa">
-          ⏸
-        </button>
-        <button class="btn" id="stopBtn" title="Stop">
-          ⏹
-        </button>
-        <button class="btn" id="nextBtn" title="Cambiar pista (aleatoria)">
-          ⏭
-        </button>
+        <button class="btn" id="prevBtn" title="Cambiar pista (aleatoria)">⏮</button>
+        <button class="btn btn-main" id="playBtn" title="Play / Reanudar">▶</button>
+        <button class="btn" id="pauseBtn" title="Pausa">⏸</button>
+        <button class="btn" id="stopBtn" title="Stop">⏹</button>
+        <button class="btn" id="nextBtn" title="Cambiar pista (aleatoria)">⏭</button>
       </div>
 
       <div class="progress-row">
@@ -337,34 +327,34 @@
   </div>
 
   <!-- AUDIO INVISIBLE -->
-  <audio id="audioElement"></audio>
+  <audio id="audioElement" preload="metadata"></audio>
 
   <script>
-    // ====== PLAYLISTS (usa tus mismos archivos en /audio) ======
+    // ====== PLAYLISTS (MP3 compatibles para móvil / PWA) ======
     const audioPlaylist = [
-      "audio/Dawn's Tidal Meditation.m4a",
-      "audio/Depths of Tranquility.m4a",
-      "audio/Desert Night Awakening.m4a",
-      "audio/DroneLab-recording.wav",
-      "audio/Lunar Dialogue.m4a",
-      "audio/Moonlit Forest Ceremony.m4a",
-      "audio/Moonlit Forest Sanctuary.m4a",
-      "audio/Night Forest Dialogue.m4a",
-      "audio/Night Forest Temple.m4a",
-      "audio/Night Grove Ceremony.m4a",
-      "audio/Night River Passage.m4a",
-      "audio/Night Spirit Dialogue.m4a",
-      "audio/Night Tide Meditation.m4a",
-      "audio/Night's Gentle Passage.m4a",
-      "audio/Ocean Breath Meditation.m4a",
-      "audio/Ocean Depths Ascension.m4a",
-      "audio/Ocean Depths Meditation.m4a",
-      "audio/Ocean Zen.m4a",
-      "audio/Pond at Midnight.m4a",
-      "audio/Sacred Waters.m4a",
-      "audio/Seaside Theta.m4a"
+      "audio/01_dawns_tidal.mp3",
+      "audio/02_depths_tranquility.mp3",
+      "audio/03_desert_night_awake.mp3",
+      "audio/04_dronelab.mp3",
+      "audio/05_lunar_dialogue.mp3",
+      "audio/06_moonlit_ceremony.mp3",
+      "audio/07_moonlit_sanctuary.mp3",
+      "audio/08_night_forest_dialogue.mp3",
+      "audio/09_night_forest_temple.mp3",
+      "audio/10_night_grove_ceremony.mp3",
+      "audio/11_night_river_passage.mp3",
+      "audio/12_night_spirit_dialogue.mp3",
+      "audio/13_night_tide_meditation.mp3",
+      "audio/14_nights_gentle_passage.mp3",
+      "audio/15_ocean_breath.mp3",
+      "audio/16_ocean_depths_ascension.mp3",
+      "audio/17_ocean_depths_meditation.mp3",
+      "audio/18_ocean_zen.mp3",
+      "audio/19_pond_midnight.mp3",
+      "audio/21_seaside_theta.mp3"
     ];
 
+    // Mantengo las rutas de video como las vienes usando
     const mandalaVideos = [
       "video/Mandala Beta relax.mp4",
       "video/Mandala onda relajacion piano.mp4",
@@ -471,7 +461,7 @@
       audioEl.pause();
       audioEl.currentTime = 0;
       audioEl.src = trackPath;
-      audioEl.load(); // fuerza recarga limpia
+      audioEl.load();
       logDebug("Cargando pista: " + trackPath);
       trackTitleEl.textContent = getReadableName(trackPath);
       progressFillEl.style.inset = "0 100% 0 0";
@@ -563,13 +553,8 @@
     });
 
     audioEl.addEventListener("pause", () => {
-      if (audioEl.currentTime === 0 || audioEl.ended) {
-        updateStatus(false);
-        syncMandalaWithAudio(false);
-      } else {
-        updateStatus(false);
-        syncMandalaWithAudio(false);
-      }
+      updateStatus(false);
+      syncMandalaWithAudio(false);
     });
 
     audioEl.addEventListener("ended", () => {
@@ -584,25 +569,11 @@
     });
 
     // ====== CONTROLES ======
-    playBtn.addEventListener("click", () => {
-      playCurrentTrack();
-    });
-
-    pauseBtn.addEventListener("click", () => {
-      pauseCurrentTrack();
-    });
-
-    stopBtn.addEventListener("click", () => {
-      stopCurrentTrack();
-    });
-
-    nextBtn.addEventListener("click", () => {
-      playRandomTrack();
-    });
-
-    prevBtn.addEventListener("click", () => {
-      playRandomTrack();
-    });
+    playBtn.addEventListener("click", playCurrentTrack);
+    pauseBtn.addEventListener("click", pauseCurrentTrack);
+    stopBtn.addEventListener("click", stopCurrentTrack);
+    nextBtn.addEventListener("click", playRandomTrack);
+    prevBtn.addEventListener("click", playRandomTrack);
 
     progressBarEl.addEventListener("click", (event) => {
       const rect = progressBarEl.getBoundingClientRect();
