@@ -585,5 +585,36 @@
       logDebug("Listo. Pulsa ▶ para empezar.");
     })();
   </script>
+
+  <script>
+  // ---- INSTALACIÓN MANUAL DE LA PWA ----
+  let deferredPrompt = null;
+
+  // Se dispara cuando la PWA es instalable
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();        // Bloquea el prompt automático
+    deferredPrompt = event;        // Guardamos el evento para usarlo después
+
+    console.log("PWA lista para instalar");
+
+    // Si quieres mostrar un botón visual, aquí lo activas
+    const installBtn = document.getElementById("installBtn");
+    if (installBtn) installBtn.style.display = "block";
+  });
+
+  // Acción al presionar un botón en pantalla (opcional)
+  async function installApp() {
+    if (!deferredPrompt) {
+      console.log("Instalación no disponible todavía");
+      return;
+    }
+    deferredPrompt.prompt(); // Muestra el diálogo nativo
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("Resultado de instalación:", outcome);
+
+    deferredPrompt = null; // Limpia después de usarlo
+  }
+</script>
+
 </body>
 </html>
