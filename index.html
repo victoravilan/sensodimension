@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <title>Sensodimension · Reproductor Mandálico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- ===== iOS / iPadOS PWA ===== -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sensodimension">
+
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<!-- Splash mínimo temporal (iOS). 
+     iOS usa "apple-touch-startup-image" y requiere varios tamaños para cubrir todos los iPhone/iPad. -->
+<link rel="apple-touch-startup-image" href="icons/icon-512.png">
 
   <!-- PWA -->
   <meta name="theme-color" content="#1e1630" />
@@ -57,9 +67,7 @@
     }
 
     @media (min-height: 780px) {
-      .video-area video {
-        height: 280px;
-      }
+      .video-area video { height: 280px; }
     }
 
     .video-overlay {
@@ -110,9 +118,7 @@
       opacity: 0.9;
     }
 
-    .title-group h1 span {
-      font-weight: 700;
-    }
+    .title-group h1 span { font-weight: 700; }
 
     .title-group p {
       font-size: 0.75rem;
@@ -129,9 +135,7 @@
       white-space: nowrap;
     }
 
-    .track-info {
-      margin: 4px 0 8px;
-    }
+    .track-info { margin: 4px 0 8px; }
 
     .track-title {
       font-size: 1rem;
@@ -174,9 +178,7 @@
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
     }
 
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-    }
+    .btn:hover { background: rgba(255, 255, 255, 0.16); }
 
     .btn-main {
       width: 52px;
@@ -242,9 +244,9 @@
       letter-spacing:0.02em;
       box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.06);
       transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, opacity .12s ease;
-      opacity:0;
+      opacity:0;                 
       transform: translateY(6px) scale(0.98);
-      pointer-events:none;
+      pointer-events:none;       
       overflow: hidden;
     }
 
@@ -476,6 +478,19 @@
       console.log("[Sensodimension]", msg);
     }
 
+    // ====== DETECCIÓN iOS / standalone ======
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches
+          || window.navigator.standalone === true;
+    }
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    }
+    function isAndroidChrome() {
+      const ua = navigator.userAgent.toLowerCase();
+      return ua.includes("android") && ua.includes("chrome") && !ua.includes("wv");
+    }
+
     // ====== AJUSTE DE AUDIO ======
     audioEl.volume = 1.0;
     audioEl.muted = false;
@@ -546,7 +561,6 @@
       audioEl.currentTime = 0;
       audioEl.src = trackPath;
       audioEl.load();
-      logDebug("Cargando pista: " + trackPath);
       trackTitleEl.textContent = getReadableName(trackPath);
       progressFillEl.style.inset = "0 100% 0 0";
       currentTimeEl.textContent = "0:00";
@@ -558,7 +572,6 @@
         const idx = pickRandomTrackIndex(-1);
         loadTrackByIndex(idx);
       }
-
       audioEl.muted = false;
       audioEl.volume = 1.0;
 
@@ -647,9 +660,7 @@
 
     // ====== EVENTOS VIDEO ======
     mandalaVideoEl.addEventListener("ended", () => {
-      if (!audioEl.paused && !audioEl.ended) {
-        playRandomMandala();
-      }
+      if (!audioEl.paused && !audioEl.ended) playRandomMandala();
     });
 
     // ====== CONTROLES ======
@@ -668,13 +679,14 @@
       }
     });
 
-    // ====== INSTALACIÓN MANUAL DE PWA ======
+    // ====== INSTALACIÓN PWA: Android prompt + iOS instrucciones ======
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
       deferredPrompt = event;
+
       if (installBtn) installBtn.classList.add("show");
       if (installHint) installHint.textContent = "Instala la app para usarla como nativa.";
-      logDebug("PWA lista para instalar");
+      logDebug("PWA lista para instalar (Chromium)");
     });
 
     window.addEventListener("appinstalled", () => {
@@ -685,17 +697,51 @@
     });
 
     async function installApp() {
-      if (!deferredPrompt) {
-        if (installHint) installHint.textContent = "Aún no disponible. Abre en Chrome/Edge y recarga.";
-        logDebug("Instalación no disponible todavía");
+      // Android/desktop con prompt nativo
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        logDebug("Resultado instalación: " + choice.outcome);
+        deferredPrompt = null;
+        if (installBtn) installBtn.classList.remove("show");
         return;
       }
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      logDebug("Resultado instalación: " + choice.outcome);
-      deferredPrompt = null;
-      if (installBtn) installBtn.classList.remove("show");
+
+      // iOS: solo instrucciones
+      if (isIOS()) {
+        if (installHint) {
+          installHint.textContent = "iPhone/iPad: botón Compartir → 'Añadir a pantalla de inicio'.";
+        }
+        logDebug("iOS: instalación manual.");
+        return;
+      }
+
+      // Otros móviles sin prompt
+      if (isAndroidChrome()) {
+        if (installHint) {
+          installHint.textContent = "Android: menú ⋮ → 'Instalar app' / 'Añadir a pantalla de inicio'.";
+        }
+        logDebug("Android sin evento: usar menú ⋮.");
+        return;
+      }
+
+      if (installHint) installHint.textContent = "Instalación no disponible en este navegador.";
     }
+
+    // Fallback: si NO hay beforeinstallprompt (iOS o heurística), mostramos botón igual
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (!deferredPrompt && !isStandalone()) {
+          if (installBtn) installBtn.classList.add("show");
+          if (installHint) {
+            installHint.textContent = isIOS()
+              ? "iPhone/iPad: Compartir → 'Añadir a pantalla de inicio'."
+              : "Si no sale el aviso: menú ⋮ → 'Instalar app'.";
+          }
+          logDebug("Fallback instalación mostrado.");
+        }
+      }, 2000);
+    });
 
     // ====== REGISTRO SERVICE WORKER ======
     if ("serviceWorker" in navigator) {
@@ -710,11 +756,9 @@
     (function init() {
       if (!audioPlaylist.length) {
         trackTitleEl.textContent = "No hay pistas de audio configuradas";
-        logDebug("No hay pistas configuradas.");
         return;
       }
       updateStatus(false);
-      logDebug("Listo. Pulsa ▶ para empezar.");
     })();
   </script>
 
