@@ -242,23 +242,13 @@
     }
 
     .credits {
-      padding: 6px 16px 4px 16px;
+      padding: 6px 16px 10px 16px;
       font-size: 0.7rem;
       opacity: 0.8;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       text-align: center;
       line-height: 1.4;
       background: rgba(10, 12, 28, 0.9);
-    }
-
-    .debug {
-      padding: 4px 16px 8px 16px;
-      font-size: 0.7rem;
-      opacity: 0.9;
-      background: rgba(10, 12, 28, 0.95);
-      color: #ffdf9f;
-      text-align: left;
-      word-break: break-word;
     }
   </style>
 </head>
@@ -322,8 +312,6 @@
       Concepto, realización, temas musicales y videos mandalas creados por:<br>
       <strong>Victor M. F. Avilan · Valor Agregado</strong>
     </div>
-    <!-- DEBUG VISIBLE TAMBIÉN EN MÓVIL -->
-    <div class="debug" id="debugLog">DEBUG: listo para reproducir.</div>
   </div>
 
   <!-- AUDIO INVISIBLE -->
@@ -351,10 +339,11 @@
       "audio/17_ocean_depths_meditation.mp3",
       "audio/18_ocean_zen.mp3",
       "audio/19_pond_midnight.mp3",
+      "audio/20_sacred_waters.mp3",
       "audio/21_seaside_theta.mp3"
     ];
 
-    // Mantengo las rutas de video como las vienes usando
+    // Videos (deja estos nombres tal como están en tu carpeta /video)
     const mandalaVideos = [
       "video/Mandala Beta relax.mp4",
       "video/Mandala onda relajacion piano.mp4",
@@ -379,26 +368,18 @@
     const nextBtn = document.getElementById("nextBtn");
     const prevBtn = document.getElementById("prevBtn");
 
-    const debugEl = document.getElementById("debugLog");
-
     function logDebug(msg) {
-      console.log(msg);
-      if (debugEl) {
-        debugEl.textContent = "DEBUG: " + msg;
-      }
+      // Solo consola (no UI)
+      console.log("[Sensodimension]", msg);
     }
 
-    // ====== AJUSTE DE AUDIO Y LOGS DE DIAGNÓSTICO ======
+    // ====== AJUSTE DE AUDIO ======
     audioEl.volume = 1.0;
     audioEl.muted = false;
 
     audioEl.addEventListener("error", () => {
       const e = audioEl.error;
       logDebug("Error de audio: code=" + (e && e.code));
-    });
-
-    audioEl.addEventListener("play", () => {
-      logDebug("Reproduciendo: " + audioEl.src);
     });
 
     // ====== ESTADO ======
@@ -482,7 +463,7 @@
         syncMandalaWithAudio(true);
         updateStatus(true);
       }).catch(err => {
-        logDebug("Error al reproducir audio (playCurrentTrack): " + err);
+        logDebug("Error al reproducir audio: " + err);
       });
     }
 
@@ -514,7 +495,7 @@
       mandalaVideoEl.currentTime = 0;
 
       mandalaVideoEl.play().catch(err => {
-        logDebug("No se pudo reproducir el video de mandala: " + err);
+        logDebug("No se pudo reproducir video: " + err);
       });
     }
 
